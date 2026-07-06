@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Najaf Resource Manager</title>
+<style>
+:root {
+  --bg: #0b0d14;
+  --surface: #131620;
+  --card: #191d28;
+  --border: #252a3a;
+  --text: #e2e4eb;
+  --text-dim: #8a8fa8;
+  --accent: #6ef7c8;
+  --accent2: #a78bfa;
+  --accent3: #38bdf8;
+  --error: #f87171;
+  --warn: #fbbf24;
+  --success: #4ade80;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 20px;
+}
+h1 {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+h1 span { color: var(--accent); }
+.subtitle {
+  text-align: center;
+  font-size: .75rem;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+  letter-spacing: .5px;
+}
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+.panel-header h2 {
+  font-size: .8rem;
+  font-weight: 600;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.panel-body { padding: 16px; }
+.form-row {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 120px;
+}
+.form-group label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.form-group input, .form-group select {
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: .85rem;
+  outline: none;
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--accent);
+}
+.form-group input::placeholder { color: #3a3f55; }
+.form-group select option { background: var(--card); }
+
+.btn {
+  padding: 8px 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--card);
+  color: var(--text);
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn-primary {
+  background: var(--accent);
+  color: #0b0d14;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+.btn-primary:hover { background: #5de6b4; }
+.btn-danger {
+  background: var(--error);
+  color: #0b0d14;
+  border-color: var(--error);
+}
+.btn-danger:hover { background: #ef4444; }
+.btn-accent2 {
+  background: var(--accent2);
+  color: #0b0d14;
+  border-color: var(--accent2);
+}
+.btn-accent2:hover { background: #9569f5; }
+.btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.btn:disabled:hover { border-color: var(--border); color: var(--text); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: var(--card);
+  color: var(--text-dim);
+  font-weight: 500;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border);
+}
+table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+}
+table tr:hover td { background: rgba(255,255,255,.03); }
+
+.matrix-container {
+  overflow-x: auto;
+}
+.matrix-label {
+  color: var(--text-dim);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+}
+.matrix-label strong { color: var(--accent); }
+
+.status-msg {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: .82rem;
+  margin-top: 8px;
+  display: none;
+}
+.status-msg.show { display: block; }
+.status-msg.success {
+  background: rgba(74,222,128,.1);
+  border: 1px solid rgba(74,222,128,.3);
+  color: var(--success);
+}
+.status-msg.error {
+  background: rgba(248,113,113,.1);
+  border: 1px solid rgba(248,113,113,.3);
+  color: var(--error);
+}
+.status-msg.info {
+  background: rgba(56,189,248,.1);
+  border: 1px solid rgba(56,189,248,.3);
+  color: var(--accent3);
+}
+
+.memory-card {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 8px 0;
+}
+.memory-stat {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 24px;
+  text-align: center;
+  min-width: 120px;
+}
+.memory-stat .val {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent3);
+}
+.memory-stat .label {
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.memory-stat .val.used { color: var(--warn); }
+.memory-stat .val.avail { color: var(--success); }
+
+.section-title {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: .75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.resource-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: .8rem;
+  margin: 2px;
+}
+.resource-tag .rname { color: var(--accent3); }
+.resource-tag .rval { color: var(--text); font-weight: 600; }
+
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 40px 20px;
+  font-size: .9rem;
+}
+.empty-state .icon { font-size: 2rem; margin-bottom: 8px; opacity: .5; }
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+}
+.tab {
+  padding: 9px 18px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: .78rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3f55; }
+
+@media (max-width: 640px) {
+  .grid-2 { grid-template-columns: 1fr; }
+  .form-row { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<h1>Najaf <span>Resource Manager</span></h1>
+<div class="subtitle">OS Resource Allocation Simulator &bull; <span>Najaf C++</span> Frontend</div>
+
+<div class="container">
+
+  <!-- Setup Panel -->
+  <div class="panel" id="setupPanel">
+    <div class="panel-header"><h2>System Setup</h2></div>
+    <div class="panel-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Processes</label>
+          <input type="number" id="numProcesses" min="1" value="3" placeholder="Number of processes">
+        </div>
+        <div class="form-group">
+          <label>Resource Types</label>
+          <input type="number" id="numResources" min="1" value="3" placeholder="Number of resource types">
+        </div>
+        <button class="btn btn-primary" onclick="initSystem()">Initialize</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resource Configuration Panel -->
+  <div class="panel" id="configPanel" style="display:none">
+    <div class="panel-header"><h2>Available Resources</h2></div>
+    <div class="panel-body">
+      <div class="form-row" id="availableInputs"></div>
+      <button class="btn btn-primary" onclick="setAvailable()">Set Available Resources</button>
+      <div class="status-msg" id="configMsg"></div>
+    </div>
+  </div>
+
+  <!-- Main Controls -->
+  <div class="panel" id="mainPanel" style="display:none">
+    <div class="panel-header">
+      <h2>Controls</h2>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-accent2" onclick="displayStatus()">Display Status</button>
+        <button class="btn" onclick="showMemory()">Show RAM</button>
+        <button class="btn btn-danger" onclick="resetSystem()">Reset</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="grid-2">
+        <div>
+          <div class="section-title">Allocate Resources</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Process ID</label>
+              <select id="allocPid"></select>
+            </div>
+          </div>
+          <div class="form-row" id="allocInputs"></div>
+          <button class="btn btn-primary" onclick="allocate()">Allocate</button>
+          <div class="status-msg" id="allocMsg"></div>
+        </div>
+        <div>
+          <div class="section-title">Release Resources</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Process ID</label>
+              <select id="releasePid"></select>
+            </div>
+          </div>
+          <div class="form-row" id="releaseInputs"></div>
+          <button class="btn btn-primary" onclick="release()">Release</button>
+          <div class="status-msg" id="releaseMsg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output Panel -->
+  <div class="panel" id="outputPanel" style="display:none">
+    <div class="panel-header"><h2>System State</h2></div>
+    <div class="panel-body">
+      <div class="tabs">
+        <button class="tab active" data-tab="status" onclick="switchTab('status')">Status</button>
+        <button class="tab" data-tab="memory" onclick="switchTab('memory')">Memory</button>
+        <button class="tab" data-tab="log" onclick="switchTab('log')">Activity Log</button>
+      </div>
+      <div class="tab-content active" id="tab-status">
+        <div id="statusOutput"><div class="empty-state"><div class="icon">&#9881;</div>Initialize the system to see status</div></div>
+      </div>
+      <div class="tab-content" id="tab-memory">
+        <div id="memoryOutput"><div class="empty-state"><div class="icon">&#9776;</div>Click "Show RAM" to view system memory</div></div>
+      </div>
+      <div class="tab-content" id="tab-log">
+        <div id="logOutput"><div class="empty-state"><div class="icon">&#9998;</div>No activity logged yet</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =========================================================================
+// NAJAF RESOURCE MANAGER — FRONTEND
+// =========================================================================
+
+let processes = 0, resources = 0;
+let available = [];
+let allocation = [];
+let activityLog = [];
+
+function $(id) { return document.getElementById(id); }
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function log(msg, type) {
+  activityLog.push({ msg, type, time: new Date().toLocaleTimeString() });
+  renderLog();
+}
+
+// ─── SETUP ────────────────────────────────────────────────────────────
+
+function initSystem() {
+  const p = parseInt($('numProcesses').value);
+  const r = parseInt($('numResources').value);
+  if (!p || p < 1) { showMsg('configMsg', 'Processes must be at least 1', 'error'); return; }
+  if (!r || r < 1) { showMsg('configMsg', 'Resource types must be at least 1', 'error'); return; }
+  processes = p;
+  resources = r;
+  available = new Array(r).fill(0);
+  allocation = Array.from({ length: p }, () => new Array(r).fill(0));
+
+  // Build available resource inputs
+  let html = '';
+  for (let i = 0; i < r; i++) {
+    html += `<div class="form-group"><label>Resource ${i + 1}</label><input type="number" id="avail_${i}" min="0" value="10" placeholder="R${i+1}"></div>`;
+  }
+  $('availableInputs').innerHTML = html;
+
+  $('setupPanel').style.display = 'none';
+  $('configPanel').style.display = 'block';
+  $('mainPanel').style.display = 'none';
+  $('outputPanel').style.display = 'none';
+  showMsg('configMsg', '', '');
+}
+
+function setAvailable() {
+  for (let i = 0; i < resources; i++) {
+    const val = parseInt($('avail_' + i).value);
+    if (isNaN(val) || val < 0) {
+      showMsg('configMsg', 'All resources must have valid non-negative values', 'error');
+      return;
+    }
+    available[i] = val;
+  }
+
+  // Build process select dropdowns
+  let pidOpts = '';
+  for (let i = 0; i < processes; i++) pidOpts += `<option value="${i}">P${i}</option>`;
+  $('allocPid').innerHTML = pidOpts;
+  $('releasePid').innerHTML = pidOpts;
+
+  // Build allocate inputs
+  let allocHtml = '';
+  for (let i = 0; i < resources; i++) {
+    allocHtml += `<div class="form-group"><label>R${i + 1}</label><input type="number" id="allocReq_${i}" min="0" value="0" placeholder="R${i+1}"></div>`;
+  }
+  $('allocInputs').innerHTML = allocHtml;
+
+  // Build release inputs
+  let relHtml = '';
+  for (let i = 0; i < resources; i++) {
+    relHtml += `<div class="form-group"><label>R${i + 1}</label><input type="number" id="releaseReq_${i}" min="0" value="0" placeholder="R${i+1}"></div>`;
+  }
+  $('releaseInputs').innerHTML = relHtml;
+
+  $('configPanel').style.display = 'none';
+  $('mainPanel').style.display = 'block';
+  $('outputPanel').style.display = 'block';
+  showMsg('configMsg', '', '');
+
+  log('System initialized: ' + processes + ' processes, ' + resources + ' resource types', 'info');
+  displayStatus();
+}
+
+function resetSystem() {
+  processes = 0; resources = 0;
+  available = []; allocation = []; activityLog = [];
+  $('setupPanel').style.display = 'block';
+  $('configPanel').style.display = 'none';
+  $('mainPanel').style.display = 'none';
+  $('outputPanel').style.display = 'none';
+  $('statusOutput').innerHTML = '<div class="empty-state"><div class="icon">&#9881;</div>Initialize the system to see status</div>';
+}
+
+// ─── ALLOCATE ─────────────────────────────────────────────────────────
+
+function allocate() {
+  const pid = parseInt($('allocPid').value);
+  const request = [];
+  for (let i = 0; i < resources; i++) {
+    const val = parseInt($('allocReq_' + i).value);
+    if (isNaN(val) || val < 0) {
+      showMsg('allocMsg', 'All request values must be non-negative', 'error');
+      return;
+    }
+    request.push(val);
+  }
+
+  let possible = true;
+  for (let i = 0; i < resources; i++) {
+    if (request[i] > available[i]) { possible = false; break; }
+  }
+
+  if (possible) {
+    for (let i = 0; i < resources; i++) {
+      available[i] -= request[i];
+      allocation[pid][i] += request[i];
+    }
+    showMsg('allocMsg', 'Resources allocated to P' + pid + ' successfully', 'success');
+    log('Allocated [' + request.join(', ') + '] to P' + pid, 'success');
+  } else {
+    showMsg('allocMsg', 'Allocation failed! Not enough resources.', 'error');
+    log('Allocation failed for P' + pid + ' — insufficient resources', 'error');
+  }
+  displayStatus();
+  setTimeout(() => { const m = $('allocMsg'); m.classList.remove('show'); }, 3000);
+}
+
+// ─── RELEASE ──────────────────────────────────────────────────────────
+
+function release() {
+  const pid = parseInt($('releasePid').value);
+  const rel = [];
+  for (let i = 0; i < resources; i++) {
+    const val = parseInt($('releaseReq_' + i).value);
+    if (isNaN(val) || val < 0) {
+      showMsg('releaseMsg', 'All release values must be non-negative', 'error');
+      return;
+    }
+    rel.push(val);
+  }
+
+  for (let i = 0; i < resources; i++) {
+    if (rel[i] <= allocation[pid][i]) {
+      allocation[pid][i] -= rel[i];
+      available[i] += rel[i];
+    }
+  }
+  showMsg('releaseMsg', 'Resources released from P' + pid, 'success');
+  log('Released [' + rel.join(', ') + '] from P' + pid, 'success');
+  displayStatus();
+  setTimeout(() => { const m = $('releaseMsg'); m.classList.remove('show'); }, 3000);
+}
+
+// ─── DISPLAY STATUS ───────────────────────────────────────────────────
+
+function displayStatus() {
+  if (!processes) return;
+
+  let html = '<div class="section-title">Available Resources</div>';
+  html += '<div style="margin-bottom:12px">';
+  for (let i = 0; i < resources; i++) {
+    html += `<span class="resource-tag"><span class="rname">R${i+1}:</span> <span class="rval">${available[i]}</span></span>`;
+  }
+  html += '</div>';
+
+  html += '<div class="section-title">Allocation Matrix</div>';
+  html += '<div class="matrix-container"><table>';
+  html += '<tr><th></th>';
+  for (let i = 0; i < resources; i++) html += '<th>R' + (i + 1) + '</th>';
+  html += '</tr>';
+  for (let i = 0; i < processes; i++) {
+    html += '<tr><td style="font-weight:600;color:var(--accent)">P' + i + '</td>';
+    for (let j = 0; j < resources; j++) {
+      html += '<td>' + allocation[i][j] + '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</table></div>';
+
+  $('statusOutput').innerHTML = html;
+  switchTab('status');
+}
+
+// ─── MEMORY ───────────────────────────────────────────────────────────
+
+function showMemory() {
+  const mem = {
+    total: (navigator.deviceMemory || '?') * 1024,
+    // JS has no direct RAM access, so we simulate
+  };
+
+  let html = '';
+  if (navigator.deviceMemory) {
+    const totalGB = navigator.deviceMemory;
+    html += '<div class="section-title">System Memory (via navigator.deviceMemory)</div>';
+    html += '<div class="memory-card">';
+    html += `<div class="memory-stat"><div class="val">${totalGB} GB</div><div class="label">Total RAM</div></div>`;
+    html += '</div>';
+    html += '<div style="text-align:center;margin-top:8px;font-size:.75rem;color:var(--text-dim)">';
+    html += 'Note: Browsers only expose total RAM (rounded to nearest power of 2). ';
+    html += 'The C++ version uses GlobalMemoryStatusEx for detailed MB-level info.';
+    html += '</div>';
+  } else {
+    html += '<div class="empty-state">';
+    html += '<div class="icon">&#9888;</div>';
+    html += 'Your browser does not expose memory info via navigator.deviceMemory.<br>';
+    html += '<span style="font-size:.8rem;color:var(--text-dim)">The C++ version reads actual RAM via GlobalMemoryStatusEx (Windows API).</span>';
+    html += '</div>';
+  }
+
+  $('memoryOutput').innerHTML = html;
+  switchTab('memory');
+  log('Displayed system memory info', 'info');
+}
+
+// ─── LOG ──────────────────────────────────────────────────────────────
+
+function renderLog() {
+  if (!activityLog.length) {
+    $('logOutput').innerHTML = '<div class="empty-state"><div class="icon">&#9998;</div>No activity logged yet</div>';
+    return;
+  }
+  let html = '<div style="max-height:300px;overflow-y:auto">';
+  for (const entry of activityLog.slice().reverse()) {
+    const color = entry.type === 'error' ? 'var(--error)' : entry.type === 'success' ? 'var(--success)' : 'var(--accent3)';
+    html += `<div style="padding:6px 8px;border-bottom:1px solid var(--border);font-size:.8rem">
+      <span style="color:var(--text-dim);font-size:.7rem">[${entry.time}]</span>
+      <span style="color:${color}">${escapeHtml(entry.msg)}</span>
+    </div>`;
+  }
+  html += '</div>';
+  $('logOutput').innerHTML = html;
+}
+
+// ─── TAB SWITCHING ────────────────────────────────────────────────────
+
+function switchTab(name) {
+  document.querySelectorAll('#outputPanel .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('#outputPanel .tab-content').forEach(t => t.classList.toggle('active', t.id === 'tab-' + name));
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────
+
+function showMsg(id, text, type) {
+  const el = $(id);
+  if (!text) { el.classList.remove('show', 'success', 'error', 'info'); return; }
+  el.textContent = text;
+  el.className = 'status-msg show ' + type;
+}
+</script>
+</body>
+</html>
